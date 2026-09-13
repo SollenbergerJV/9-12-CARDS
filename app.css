@@ -1,0 +1,798 @@
+/* ============================================================
+   TOKENS
+   Two table styles — Felt (a card-room green) and Slate (quiet
+   modern) — each with a day and a night palette. Card faces stay
+   paper-white in every combination, the way real cards do.
+   ============================================================ */
+:root{
+  /* constants: the deck itself */
+  --card-face:#fdfbf6; --card-face-2:#f3eee2; --card-ink:#1a1815; --card-red:#b0202c;
+  --card-edge:rgba(24,20,14,.18); --card-shade:rgba(24,20,14,.28);
+  --m1:#a9701f; --m2:#1f7a6a; --m3:#5f56a8; --m4:#a8452a;
+  --bad:#b0202c; --good:#1f7a5a; --lead:#1a7346;
+
+  /* type + metrics */
+  --ui:'Manrope',ui-sans-serif,system-ui,'Segoe UI',Roboto,sans-serif;
+  --display:'Bodoni Moda',ui-serif,Georgia,'Times New Roman',serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --cw:72px; --ch:103px; --cr:8px;
+  --r:13px; --r-sm:9px;
+  --pad:clamp(8px,2.2vw,15px);
+
+  /* FELT — day */
+  --ground-a:#35845e; --ground-b:#1c5340; --rail:#8a5e3a; --rail-2:#6d472a;
+  --panel:#faf5ea; --panel-2:#f1e8d6; --line:#e0d2b8;
+  --ink:#241f18; --ink-dim:#6d6252;
+  --accent:#9c6220; --accent-ink:#fff9ee;
+  --lead:#1a7346;
+  --on-table:#f4efe3; --on-table-dim:rgba(244,239,227,.72); --on-table-line:rgba(255,255,255,.18);
+  --back-a:#8e2230; --back-b:#5d141f; --back-line:rgba(255,225,180,.34);
+  --shadow:0 10px 26px rgba(10,30,20,.30);
+}
+:root[data-skin="slate"]{
+  --ground-a:#eff2f1; --ground-b:#dee4e2; --rail:#c9d2cf; --rail-2:#b6c1bd;
+  --panel:#ffffff; --panel-2:#f4f7f6; --line:#e1e7e5;
+  --ink:#141a19; --ink-dim:#65726e;
+  --accent:#0e7568; --accent-ink:#ffffff;
+  --lead:#0c7345;
+  --on-table:#222b29; --on-table-dim:#5c6a66; --on-table-line:rgba(20,30,28,.12);
+  --back-a:#17726a; --back-b:#0c4842; --back-line:rgba(220,255,250,.30);
+  --shadow:0 10px 26px rgba(20,40,36,.14);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground-a:#1b4a37; --ground-b:#09241a; --rail:#4a3120; --rail-2:#331f12;
+    --panel:#16241d; --panel-2:#1d2e26; --line:#2d453a;
+    --ink:#eee6d5; --ink-dim:#9fa294;
+    --accent:#d5a256; --accent-ink:#1a1206;
+    --lead:#5fd39b;
+    --on-table:#ece5d5; --on-table-dim:rgba(236,229,213,.68); --on-table-line:rgba(255,255,255,.12);
+    --back-a:#7a1c28; --back-b:#43101a; --back-line:rgba(255,225,180,.30);
+    --shadow:0 12px 30px rgba(0,0,0,.45);
+  }
+  :root:not([data-theme="light"])[data-skin="slate"]{
+    --ground-a:#1a1f1e; --ground-b:#0e1211; --rail:#2b3230; --rail-2:#1f2523;
+    --panel:#1e2523; --panel-2:#262e2c; --line:#333b39;
+    --ink:#e6ecea; --ink-dim:#94a09c;
+    --accent:#31b7a4; --accent-ink:#05201c;
+    --lead:#4ad596;
+    --on-table:#dee6e3; --on-table-dim:#93a09c; --on-table-line:rgba(255,255,255,.10);
+    --back-a:#166f66; --back-b:#0a4239; --back-line:rgba(220,255,250,.26);
+    --shadow:0 12px 30px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --ground-a:#1b4a37; --ground-b:#09241a; --rail:#4a3120; --rail-2:#331f12;
+  --panel:#16241d; --panel-2:#1d2e26; --line:#2d453a;
+  --ink:#eee6d5; --ink-dim:#9fa294;
+  --accent:#d5a256; --accent-ink:#1a1206;
+  --lead:#5fd39b;
+  --on-table:#ece5d5; --on-table-dim:rgba(236,229,213,.68); --on-table-line:rgba(255,255,255,.12);
+  --back-a:#7a1c28; --back-b:#43101a; --back-line:rgba(255,225,180,.30);
+  --shadow:0 12px 30px rgba(0,0,0,.45);
+}
+:root[data-theme="dark"][data-skin="slate"]{
+  --ground-a:#1a1f1e; --ground-b:#0e1211; --rail:#2b3230; --rail-2:#1f2523;
+  --panel:#1e2523; --panel-2:#262e2c; --line:#333b39;
+  --ink:#e6ecea; --ink-dim:#94a09c;
+  --accent:#31b7a4; --accent-ink:#05201c;
+  --lead:#4ad596;
+  --on-table:#dee6e3; --on-table-dim:#93a09c; --on-table-line:rgba(255,255,255,.10);
+  --back-a:#166f66; --back-b:#0a4239; --back-line:rgba(220,255,250,.26);
+  --shadow:0 12px 30px rgba(0,0,0,.5);
+}
+
+/* card sizing options */
+:root[data-size="cozy"]{ --cw:62px; --ch:89px; }
+:root[data-size="large"]{ --cw:84px; --ch:120px; }
+@media (min-width:760px){
+  :root{ --cw:92px; --ch:131px; --cr:10px; }
+  :root[data-size="cozy"]{ --cw:78px; --ch:111px; }
+  :root[data-size="large"]{ --cw:106px; --ch:151px; }
+}
+
+/* short screens: shrink the deck itself rather than clipping the table */
+@media (max-height:770px){
+  :root{ --cw:64px; --ch:92px; }
+  :root[data-size="cozy"]{ --cw:56px; --ch:80px; }
+  :root[data-size="large"]{ --cw:74px; --ch:106px; }
+  .card.mini{--cw:34px;width:34px;height:49px}
+}
+@media (max-height:668px){
+  :root{ --cw:56px; --ch:80px; }
+  :root[data-size="cozy"]{ --cw:50px; --ch:72px; }
+  :root[data-size="large"]{ --cw:63px; --ch:90px; }
+  .card.mini{--cw:30px;width:30px;height:43px}
+  .oppinfo{margin-top:-9px;min-height:22px}
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:var(--ui); color:var(--on-table);
+  background:var(--ground-b);
+  -webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit}
+h1,h2,h3{margin:0;text-wrap:balance}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+.app{
+  height:100dvh; overflow:hidden; display:flex; flex-direction:column;
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--ground-a) 0%, var(--ground-b) 78%);
+}
+.screen{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+[hidden]{display:none!important}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card{
+  position:relative; flex:0 0 auto;
+  width:var(--cw); height:var(--ch); border-radius:var(--cr);
+  background:linear-gradient(160deg,var(--card-face) 0%,var(--card-face-2) 100%);
+  color:var(--card-ink);
+  box-shadow:0 1px 0 var(--card-edge), 0 6px 14px var(--card-shade);
+  border:1px solid var(--card-edge);
+  user-select:none;
+  transition:transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .16s;
+}
+.card.red{color:var(--card-red)}
+/* The left edge is all you see of a fanned card, so the rank lives there
+   and everything else stays quiet. */
+.card .ci{position:absolute;top:5%;left:8%;display:flex;flex-direction:column;align-items:center;line-height:.92}
+.card .ci b{font-weight:800;font-size:calc(var(--cw)*.33);letter-spacing:-.03em}
+.card .ci i{font-style:normal;font-size:calc(var(--cw)*.23);margin-top:.06em}
+.card .mid{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.card .mid i{font-style:normal;font-size:calc(var(--cw)*.42);opacity:.88;line-height:1}
+.card .mid b{
+  font-family:var(--display);font-weight:700;font-size:calc(var(--cw)*.52);
+  line-height:1;opacity:.92;letter-spacing:.01em;
+}
+
+.card.back{background:linear-gradient(150deg,var(--back-a),var(--back-b));border-color:rgba(0,0,0,.3)}
+.card.back::after{
+  content:"";position:absolute;inset:7%;border-radius:calc(var(--cr) - 4px);
+  border:1.5px solid var(--back-line);
+  background:
+    repeating-linear-gradient(45deg,var(--back-line) 0 1px,transparent 1px 9px),
+    repeating-linear-gradient(-45deg,var(--back-line) 0 1px,transparent 1px 9px);
+  opacity:.55;
+}
+.card.mini{--cw:38px;width:38px;height:54px;--cr:5px}
+@media (min-width:760px){.card.mini{--cw:46px;width:46px;height:66px}}
+
+/* meld + deadwood marking */
+.card .band{
+  position:absolute;left:0;right:0;top:0;height:6px;
+  border-radius:var(--cr) var(--cr) 0 0;background:transparent;
+}
+.card.g1 .band{background:var(--m1)} .card.g1{border-color:var(--m1)}
+.card.g2 .band{background:var(--m2)} .card.g2{border-color:var(--m2)}
+.card.g3 .band{background:var(--m3)} .card.g3{border-color:var(--m3)}
+.card.g4 .band{background:var(--m4)} .card.g4{border-color:var(--m4)}
+.card .dwv{
+  position:absolute;bottom:5%;left:8%;font-family:var(--mono);font-size:calc(var(--cw)*.175);
+  font-weight:600;color:var(--card-ink);opacity:.38;
+}
+.card.red .dwv{color:var(--card-red)}
+
+/* The card you just picked up, so it never gets lost when the hand re-sorts.
+   The ring is drawn inside the card: an outside ring would sit on top of the
+   next card and hide its rank. */
+.card.fresh{box-shadow:inset 0 0 0 2.5px var(--accent),0 6px 14px var(--card-shade)}
+.card.tappable{cursor:pointer;touch-action:manipulation}
+.card.tappable:hover{transform:translateY(-7px)}
+.card.sel{transform:translateY(-18px);box-shadow:0 0 0 3px var(--accent),0 14px 26px var(--card-shade);z-index:5}
+.card.sel:hover{transform:translateY(-18px)}
+.card.ghost{opacity:.38}
+
+@keyframes dealIn{from{opacity:0;transform:translate(0,-46vh) rotate(9deg) scale(.86)}to{opacity:1;transform:none}}
+@keyframes pop{from{transform:scale(.82) translateY(-14px);opacity:.3}to{transform:none;opacity:1}}
+.dealing .card{animation:dealIn .42s cubic-bezier(.2,.75,.3,1) backwards;animation-delay:calc(var(--i,0)*38ms)}
+.popin{animation:pop .22s cubic-bezier(.2,.75,.3,1)}
+
+/* ============================================================
+   BUTTONS + CONTROLS
+   ============================================================ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.5em;
+  padding:.62em 1.05em;border-radius:var(--r-sm);border:1px solid var(--on-table-line);
+  background:rgba(255,255,255,.09);color:var(--on-table);
+  font-weight:700;font-size:.95rem;cursor:pointer;
+  transition:background .15s,transform .1s,border-color .15s;
+}
+:root[data-skin="slate"] .btn{background:var(--panel);border-color:var(--line);color:var(--ink)}
+.btn:hover{background:rgba(255,255,255,.16)}
+:root[data-skin="slate"] .btn:hover{background:var(--panel-2)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);border-color:transparent;color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.big{padding:.95em 1.4em;font-size:1.02rem;width:100%}
+/* The base .btn is drawn for the felt: translucent white with pale text. On a
+   panel — a sheet, the setup card, the code box — that is near-invisible in
+   light mode, so buttons in that context take the panel's own colours. */
+.panel .btn,.sheet .btn,.codebox .btn,.chatdock .btn{
+  background:var(--panel-2);border-color:var(--line);color:var(--ink);
+}
+.panel .btn:hover,.sheet .btn:hover,.codebox .btn:hover,.chatdock .btn:hover{background:var(--line)}
+.panel .btn.primary,.sheet .btn.primary,.codebox .btn.primary{
+  background:var(--accent);border-color:transparent;color:var(--accent-ink);
+}
+.panel .btn.primary:hover,.sheet .btn.primary:hover,.codebox .btn.primary:hover{
+  background:var(--accent);filter:brightness(1.07);
+}
+.btn[disabled]{opacity:.42;cursor:not-allowed}
+.btn .k{font-family:var(--mono);font-weight:600;opacity:.8}
+
+.icobtn{
+  width:38px;height:38px;display:grid;place-items:center;border-radius:10px;
+  border:1px solid var(--on-table-line);background:rgba(255,255,255,.08);
+  color:var(--on-table);cursor:pointer;font-size:1rem;
+}
+:root[data-skin="slate"] .icobtn{background:var(--panel);border-color:var(--line);color:var(--ink)}
+.icobtn:hover{background:rgba(255,255,255,.17)}
+:root[data-skin="slate"] .icobtn:hover{background:var(--panel-2)}
+
+.seg{display:flex;gap:4px;padding:4px;border-radius:11px;background:var(--panel-2);border:1px solid var(--line)}
+.seg button{
+  flex:1;padding:.6em .5em;border:0;border-radius:8px;background:transparent;color:var(--ink-dim);
+  font-weight:700;font-size:.86rem;cursor:pointer;transition:.15s;white-space:nowrap;
+}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button:not([aria-pressed="true"]):hover{color:var(--ink)}
+
+.field{display:flex;flex-direction:column;gap:7px}
+.field>label{font-size:.74rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-dim)}
+.field input[type=text]{
+  padding:.7em .8em;border-radius:9px;border:1px solid var(--line);
+  background:var(--panel-2);color:var(--ink);font:inherit;font-weight:600;width:100%;
+}
+
+/* ============================================================
+   LOBBY
+   ============================================================ */
+.lobby{align-items:center;justify-content:center;padding:var(--pad);overflow-y:auto}
+.lobby-inner{width:100%;max-width:440px;display:flex;flex-direction:column;gap:18px;padding:24px 0}
+.brand{text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center}
+.brand .pips{display:flex;gap:9px;font-size:1.15rem;color:var(--on-table-dim)}
+.brand .pips span:nth-child(2),.brand .pips span:nth-child(3){color:var(--card-red);opacity:.85}
+.brand h1{font-family:var(--display);font-weight:500;font-size:clamp(2.3rem,9vw,3.1rem);letter-spacing:-.01em;color:var(--on-table)}
+.brand p{margin:0;color:var(--on-table-dim);font-size:.95rem;font-weight:500}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);color:var(--ink)}
+.setup{padding:18px;display:flex;flex-direction:column;gap:16px}
+.gamepick{display:grid;gap:10px}
+.gamecard{
+  display:flex;gap:12px;align-items:center;text-align:left;width:100%;
+  padding:13px;border-radius:11px;border:1.5px solid var(--line);background:var(--panel-2);
+  color:var(--ink);cursor:pointer;transition:.15s;
+}
+.gamecard[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel-2))}
+.gamecard[disabled]{opacity:.55;cursor:default}
+.gamecard .glyph{
+  width:42px;height:42px;flex:0 0 auto;border-radius:9px;display:grid;place-items:center;
+  background:var(--panel);border:1px solid var(--line);font-size:1.15rem;
+}
+.gamecard>span:nth-child(2){flex:1;min-width:0}
+.gamecard b{display:block;font-size:.98rem}
+.gamecard small{display:block;color:var(--ink-dim);font-size:.79rem;margin-top:2px}
+.tag{
+  font-size:.63rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  padding:.28em .55em;border-radius:5px;background:var(--panel);border:1px solid var(--line);color:var(--ink-dim);
+  margin-left:auto;flex:0 0 auto;
+}
+.names{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lenNote{margin:0;font-size:.78rem;color:var(--ink-dim);line-height:1.4}
+.lobby-foot{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.linkbtn{background:none;border:0;color:var(--on-table-dim);font-weight:700;font-size:.86rem;cursor:pointer;padding:.5em .7em;border-radius:8px}
+.linkbtn:hover{color:var(--on-table);background:rgba(255,255,255,.09)}
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+.table{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.topbar{
+  display:flex;align-items:center;gap:8px;padding:5px var(--pad);
+  border-bottom:1px solid var(--on-table-line);flex:0 0 auto;
+}
+.scoreboard{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:9px;
+  font-size:.84rem;min-width:0;flex-wrap:nowrap;
+}
+.sb{display:flex;align-items:center;gap:6px;min-width:0;flex:0 0 auto}
+.sb .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:10ch;color:var(--on-table-dim)}
+.sb .pts{font-family:var(--mono);font-weight:600;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.sb.lead .nm{color:var(--on-table)}
+.sb.lead .pts{color:var(--lead);font-weight:700}
+.sb.lead .pts::after{content:"";display:inline-block;width:0}
+.sb .dot{width:7px;height:7px;border-radius:50%;background:transparent;flex:0 0 auto}
+.sb.act .dot{background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
+.sbsep{color:var(--on-table-dim);font-size:.75rem;font-weight:700}
+.target-chip{font-size:.63rem;font-weight:800;letter-spacing:.04em;color:var(--on-table-dim);text-transform:uppercase;white-space:nowrap;flex:0 0 auto}
+
+.oppzone{flex:0 0 auto;padding:6px var(--pad) 2px;display:flex;flex-direction:column;align-items:center;gap:5px}
+.seat{display:flex;align-items:center;gap:9px;font-size:.85rem;color:var(--on-table-dim)}
+.seat .av{
+  width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:.8rem;flex:0 0 auto;
+}
+.seat b{color:var(--on-table);font-weight:700}
+/* Where the opponent drew from is public knowledge and shapes your play,
+   so it gets a persistent pill rather than a message that scrolls away. */
+.oppinfo{display:flex;align-items:center;justify-content:center;margin-top:-7px;min-height:24px}
+/* Kings no longer has one of these; on the Gin table it drops a quarter inch
+   with the piles, so it is not pressed against the opponent's cards. */
+#screen-table .oppinfo{margin-top:17px}
+.drawpill{
+  display:inline-flex;align-items:center;gap:6px;padding:.34em .75em;border-radius:99px;
+  font-size:.78rem;font-weight:700;line-height:1.2;text-align:center;
+  border:1px solid var(--on-table-line);background:rgba(255,255,255,.08);color:var(--on-table-dim);
+}
+:root[data-skin="slate"] .drawpill{background:var(--panel);border-color:var(--line);color:var(--ink-dim)}
+.drawpill.pile{border-color:var(--accent);color:var(--on-table);background:color-mix(in srgb,var(--accent) 16%,transparent)}
+:root[data-skin="slate"] .drawpill.pile{color:var(--ink)}
+.drawpill b{color:var(--accent);font-weight:800}
+.drawpill.flash{animation:pillIn .35s cubic-bezier(.2,.75,.3,1)}
+@keyframes pillIn{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+.opphand{display:flex;justify-content:center}
+.opphand .card{margin-left:-26px}
+.opphand .card:first-child{margin-left:0}
+@media (min-width:760px){.opphand .card{margin-left:-30px}}
+
+.center{
+  position:relative;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:9px;
+  /* Centred contents move down by half the top padding, so 48px drops the
+     deck and discard a quarter of an inch and leaves the line above them
+     room to breathe. The hand-fitting code subtracts the same 48. */
+  padding:48px var(--pad) 4px;
+}
+/* the table inlay — an oval of play, the way a real card table is edged */
+.center::before{
+  content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(720px,94%);height:min(92%,460px);border-radius:50%;
+  border:1.5px solid var(--on-table-line);pointer-events:none;
+}
+.piles{display:flex;gap:clamp(16px,6vw,42px);align-items:flex-start}
+.pileslot{display:flex;flex-direction:column;align-items:center;gap:7px}
+.pilelabel{font-size:.65rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--on-table-dim)}
+.pilebox{position:relative;width:var(--cw);height:var(--ch)}
+.pilebox .card{position:absolute;inset:0}
+.pilebox .stackghost{
+  position:absolute;border-radius:var(--cr);border:1px solid var(--card-edge);
+  background:linear-gradient(150deg,var(--back-a),var(--back-b));opacity:.75;
+}
+.empty-pile{
+  position:absolute;inset:0;border-radius:var(--cr);
+  border:2px dashed var(--on-table-line);display:grid;place-items:center;
+  color:var(--on-table-dim);font-size:.72rem;font-weight:700;text-align:center;padding:6px;
+}
+.pilebox.clickable{cursor:pointer}
+.pilebox::after{
+  content:"";position:absolute;inset:-5px;border-radius:calc(var(--cr) + 5px);
+  border:2px solid var(--accent);opacity:0;transition:opacity .2s;pointer-events:none;
+}
+.pilebox.clickable:hover::after{opacity:1}
+/* the pile the computer is about to draw from, held long enough to read */
+.pilebox.hot::after{opacity:1;animation:hotPulse 1.05s ease-in-out infinite}
+@keyframes hotPulse{0%,100%{opacity:.4}50%{opacity:1}}
+.stockcount{font-family:var(--mono);font-size:.75rem;color:var(--on-table-dim);font-variant-numeric:tabular-nums}
+
+.tablemsg{
+  text-align:center;font-size:.88rem;font-weight:600;color:var(--on-table);
+  min-height:1.3em;max-width:34ch;text-wrap:balance;
+}
+.tablemsg .sub{display:block;font-size:.8rem;font-weight:500;color:var(--on-table-dim);margin-top:3px}
+
+.youzone{flex:0 0 auto;padding:2px var(--pad) calc(var(--pad) + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:6px}
+/* The deadwood chip used to sit at the left of this row. It repeated what the
+   Knock button already says, and on a narrow phone it was one more thing for a
+   long status line to collide with, so it is gone and the sort buttons keep the
+   row to themselves. */
+.handmeta{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;min-height:0}
+.sorts{display:flex;gap:6px}
+.sorts button{
+  padding:.42em .68em;border-radius:8px;border:1px solid var(--on-table-line);
+  background:rgba(255,255,255,.07);color:var(--on-table-dim);font-size:.76rem;font-weight:700;cursor:pointer;
+}
+:root[data-skin="slate"] .sorts button{background:var(--panel);border-color:var(--line);color:var(--ink-dim)}
+.sorts button:hover{color:var(--on-table);background:rgba(255,255,255,.15)}
+:root[data-skin="slate"] .sorts button:hover{color:var(--ink);background:var(--panel-2)}
+.sorts button[aria-pressed="true"]{background:var(--accent);border-color:transparent;color:var(--accent-ink)}
+:root[data-skin="slate"] .sorts button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.sorts button[aria-pressed="true"]:hover{background:var(--accent);color:var(--accent-ink);filter:brightness(1.06)}
+
+.hand{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding-top:14px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
+}
+.hand::-webkit-scrollbar{display:none}
+.handrow{display:flex;justify-content:center;align-items:flex-end}
+.handrow .card{margin-left:calc(-1 * var(--ov,0px))}
+.handrow .card:first-child{margin-left:0}
+
+.actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;min-height:42px;align-items:center}
+.actions .btn{flex:1 1 auto;max-width:260px}
+.hint{color:var(--on-table-dim);font-size:.86rem;font-weight:600;text-align:center}
+.thinking{display:flex;gap:5px;align-items:center;color:var(--on-table-dim);font-size:.86rem;font-weight:600}
+.thinking i{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blip 1.1s infinite}
+.thinking i:nth-child(2){animation-delay:.16s}.thinking i:nth-child(3){animation-delay:.32s}
+@keyframes blip{0%,60%,100%{opacity:.25}30%{opacity:1}}
+
+/* ============================================================
+   KINGS IN THE CORNER — the cross, its corners, and the deck
+   ============================================================ */
+.kwrap{
+  position:relative;flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;
+  /* The contents are centred, so top padding moves them down by HALF of it.
+     36px of padding therefore drops the board 3/16 of an inch (18px). The
+     board-fitting code subtracts the same 36 so nothing overflows. */
+  padding:36px var(--pad) 2px;
+}
+#kMsg{flex:0 0 auto}
+.kboard{
+  --bw:64px; --bh:92px; --bgap:6px;
+  display:grid;grid-template-columns:repeat(3,var(--bw));
+  grid-auto-rows:var(--bh);gap:var(--bgap);
+}
+.kslot{position:relative;width:var(--bw);height:var(--bh);border-radius:8px}
+.kslot .card{--cw:var(--bw);width:var(--bw);height:var(--bh);--cr:8px;position:absolute;inset:0}
+/* buried cards show only as edges, so depth reads at a glance */
+.kslot .under{
+  position:absolute;border-radius:8px;background:var(--card-face-2);
+  border:1px solid var(--card-edge);
+}
+.kempty{
+  position:absolute;inset:0;border-radius:8px;border:2px dashed var(--on-table-line);
+  display:grid;place-items:center;color:var(--on-table-dim);
+  font-family:var(--display);font-weight:700;font-size:calc(var(--bw)*.42);opacity:.5;
+}
+:root[data-skin="slate"] .kempty{border-color:var(--line);color:var(--ink-dim)}
+/* On a real table every card in a pile is fanned out where you can see it.
+   The card at the BOTTOM is the one that decides whether the pile can move,
+   so it is named here rather than left buried. */
+.kbase{
+  position:absolute;left:0;right:0;bottom:0;height:34%;
+  z-index:3;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:0 0 7px 7px;
+  font-family:var(--mono);font-weight:600;letter-spacing:.01em;white-space:nowrap;
+  font-size:max(11px,calc(var(--bw) * .24));
+  background:var(--card-ink);color:var(--card-face);
+}
+.kbase.red{background:var(--card-red)}
+.kslot.pickable{cursor:pointer;touch-action:manipulation}
+.kslot.picked::after{
+  content:"";position:absolute;inset:-4px;border-radius:12px;
+  border:2.5px solid var(--accent);pointer-events:none;
+}
+.kslot.landed{animation:landPop .3s cubic-bezier(.2,.75,.3,1)}
+@keyframes landPop{from{transform:scale(.86);opacity:.45}to{transform:none;opacity:1}}
+.kslot.refuse{animation:refuse .34s ease}
+@keyframes refuse{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.kdeck{
+  position:relative;width:var(--bw);height:var(--bh);
+  display:flex;align-items:center;justify-content:center;
+}
+.kdeck .card{--cw:var(--bw);width:var(--bw);height:var(--bh);--cr:8px;position:absolute;inset:0}
+.kdeck .kleft{
+  position:relative;z-index:2;font-family:var(--mono);font-size:.62rem;font-weight:600;
+  color:#fff;background:rgba(0,0,0,.45);border-radius:5px;padding:1px 5px;
+}
+.kdeck .kempty{font-size:.58rem;font-family:var(--ui);letter-spacing:.06em;font-weight:700}
+
+/* ============================================================
+   SHEETS / MODALS
+   ============================================================ */
+.scrim{
+  position:fixed;inset:0;z-index:60;background:rgba(8,16,12,.62);
+  display:flex;align-items:flex-end;justify-content:center;padding:0;
+  animation:fade .18s ease;backdrop-filter:blur(3px);
+}
+@media (min-width:640px){.scrim{align-items:center;padding:24px}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet{
+  width:100%;max-width:560px;max-height:88dvh;overflow-y:auto;
+  background:var(--panel);color:var(--ink);border:1px solid var(--line);
+  border-radius:18px 18px 0 0;box-shadow:var(--shadow);
+  animation:rise .24s cubic-bezier(.2,.75,.3,1);
+}
+@media (min-width:640px){.sheet{border-radius:16px}}
+@keyframes rise{from{transform:translateY(26px);opacity:0}to{transform:none;opacity:1}}
+.sheet-hd{
+  position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);
+  padding:16px 18px;display:flex;align-items:center;gap:12px;z-index:2;
+}
+.sheet-hd h2{font-family:var(--display);font-weight:500;font-size:1.35rem;flex:1;color:var(--ink)}
+.sheet-bd{padding:18px;display:flex;flex-direction:column;gap:16px}
+.sheet-ft{padding:0 18px 18px;display:flex;gap:9px}
+.sheet-ft .btn{flex:1}
+.closex{margin-left:auto;width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink-dim);cursor:pointer;display:grid;place-items:center}
+.closex:hover{color:var(--ink)}
+
+.settings-grid{display:flex;flex-direction:column;gap:15px}
+
+/* rules */
+.rules h3{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.rules p,.rules li{font-size:.92rem;line-height:1.55;color:var(--ink)}
+.rules p{margin:0 0 10px}
+.rules ul,.rules ol{margin:0 0 10px;padding-left:1.15em;display:flex;flex-direction:column;gap:6px}
+.rules section{padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.rules section:last-child{border:0;margin:0;padding:0}
+.valtable{width:100%;border-collapse:collapse;font-size:.88rem;margin:2px 0 10px}
+.valtable td{padding:.42em .5em;border-bottom:1px solid var(--line)}
+.valtable td:last-child{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink-dim)}
+
+/* hand summary */
+.verdict{text-align:center;display:flex;flex-direction:column;gap:5px;align-items:center}
+.verdict .big{font-family:var(--display);font-size:1.75rem;font-weight:500;line-height:1.1}
+.verdict .pts{
+  font-family:var(--mono);font-size:.85rem;font-weight:600;
+  padding:.35em .7em;border-radius:99px;background:var(--accent);color:var(--accent-ink);
+}
+.verdict .why{color:var(--ink-dim);font-size:.88rem;max-width:36ch;text-wrap:balance}
+.mathline{
+  font-family:var(--mono);font-size:.86rem;text-align:center;color:var(--ink-dim);
+  padding:10px;border-radius:9px;background:var(--panel-2);border:1px solid var(--line);
+  font-variant-numeric:tabular-nums;
+}
+.reveal{display:flex;flex-direction:column;gap:12px}
+.rev-side{border:1px solid var(--line);border-radius:11px;padding:11px;background:var(--panel-2)}
+.rev-side>h4{margin:0 0 9px;font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-dim);display:flex;justify-content:space-between;gap:8px}
+.rev-side>h4 span{font-family:var(--mono);color:var(--ink);text-transform:none;letter-spacing:0}
+.meldrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:7px}
+.meldrow:last-child{margin-bottom:0}
+.mlabel{font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-dim);width:100%}
+.minicard{
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:34px;padding:5px 4px;border-radius:6px;background:var(--card-face);color:var(--card-ink);
+  border:1px solid var(--card-edge);font-weight:800;font-size:.82rem;line-height:1.05;
+}
+.minicard.red{color:var(--card-red)}
+.minicard i{font-style:normal;font-size:.78rem;font-weight:600}
+.minicard.laid{box-shadow:0 0 0 2px var(--good)}
+.minicard.b1{border-color:var(--m1);border-width:2px}
+.minicard.b2{border-color:var(--m2);border-width:2px}
+.minicard.b3{border-color:var(--m3);border-width:2px}
+.minicard.b4{border-color:var(--m4);border-width:2px}
+.histlist{display:flex;flex-direction:column;gap:5px;font-size:.84rem}
+.histrow{display:flex;justify-content:space-between;gap:10px;padding:.45em .6em;border-radius:7px;background:var(--panel-2)}
+.histrow span:last-child{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink-dim)}
+
+/* handoff */
+.handoff{
+  position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:20px;padding:28px;text-align:center;
+  background:linear-gradient(160deg,var(--ground-a),var(--ground-b));color:var(--on-table);
+}
+.handoff .who{font-family:var(--display);font-size:clamp(1.9rem,8vw,2.6rem);font-weight:500}
+.handoff p{margin:0;color:var(--on-table-dim);max-width:30ch;font-weight:500}
+.handoff .btn{max-width:280px;width:100%}
+
+.footnote{font-size:.78rem;color:var(--ink-dim);line-height:1.5}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--ink-dim);font-weight:600}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+
+/* ============================================================
+   ONLINE PLAY — the waiting room, the video window, the chat
+   ============================================================ */
+
+/* ---- lobby: the online panel ---- */
+.onlinebox{display:flex;flex-direction:column;gap:10px}
+.orline{display:flex;align-items:center;gap:10px;color:var(--ink-dim);font-size:12px;
+  text-transform:uppercase;letter-spacing:.1em}
+.orline::before,.orline::after{content:"";flex:1;height:1px;background:var(--line)}
+.joinrow{display:flex;gap:8px}
+.joinrow input{
+  flex:1;min-width:0;text-transform:uppercase;letter-spacing:.34em;
+  font-family:var(--mono);font-weight:600;font-size:20px;text-align:center;
+}
+.joinrow .btn{flex:0 0 auto;padding-inline:20px}
+.hint{margin:2px 0 0;color:var(--ink-dim);font-size:13px;line-height:1.45}
+.room-inner .hint{color:var(--on-table-dim);font-weight:500}
+
+/* ---- the waiting room ---- */
+.screen.room{align-items:center;justify-content:center;padding:24px}
+.room-inner{width:min(440px,100%);text-align:center;display:flex;flex-direction:column;gap:14px}
+.room-inner h2{font-family:var(--display);font-weight:500;font-size:clamp(26px,5.5vw,34px);margin:0;color:var(--on-table)}
+.roomsub{margin:0;color:var(--on-table-dim)}
+.codebox{
+  display:flex;flex-direction:column;gap:10px;align-items:center;
+  padding:20px 16px;border:1px solid var(--line);border-radius:16px;background:var(--panel);
+}
+.codebox .btn{width:100%;max-width:260px}
+.code{
+  font-family:var(--mono);font-weight:600;
+  font-size:clamp(38px,12vw,58px);letter-spacing:.18em;
+  padding-left:.18em;                       /* balance the trailing letter-space */
+  color:var(--lead);user-select:all;
+}
+.roomwait{display:flex;align-items:center;justify-content:center;gap:9px;margin:0;color:var(--on-table-dim)}
+.spinner{
+  width:15px;height:15px;flex:0 0 auto;border-radius:50%;
+  border:2px solid var(--on-table-line);border-top-color:var(--on-table);
+  animation:spin 900ms linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spinner{animation-duration:2.4s}}
+
+/* ---- the floating video window ---- */
+.calldock{
+  position:fixed;z-index:60;width:176px;
+  border-radius:14px;overflow:hidden;
+  background:#12161a;border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 12px 34px rgba(0,0,0,.42);
+  touch-action:none;                        /* we drag it ourselves */
+}
+.calldock.min .callbody,.calldock.min .callbar{display:none}
+.callgrip{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  padding:5px 6px 5px 9px;cursor:grab;background:rgba(255,255,255,.07);
+  font-size:11px;font-weight:600;color:#e8eef2;
+}
+.calldock.dragging .callgrip{cursor:grabbing}
+.callwho{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.callmin{
+  flex:0 0 auto;width:20px;height:20px;border:0;border-radius:6px;cursor:pointer;
+  background:rgba(255,255,255,.12);color:#e8eef2;font-size:14px;line-height:1;
+}
+.callbody{position:relative;aspect-ratio:4/3;background:#0c0f12}
+#remoteVid{width:100%;height:100%;object-fit:cover;display:block;background:#0c0f12}
+#localVid:not(.on){display:none}
+#localVid{
+  position:absolute;right:6px;bottom:6px;width:38%;aspect-ratio:4/3;
+  object-fit:cover;border-radius:7px;border:1px solid rgba(255,255,255,.28);
+  background:#0c0f12;transform:scaleX(-1);   /* a mirror is what people expect of themselves */
+}
+.callnote{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  padding:10px;text-align:center;font-size:11.5px;line-height:1.4;color:#c6d2da;
+}
+.callnote[hidden]{display:none}
+.callbar{display:flex;gap:4px;padding:5px}
+.cbtn{
+  flex:1;padding:6px 2px;border:0;border-radius:8px;cursor:pointer;
+  background:rgba(255,255,255,.11);color:#e8eef2;font:inherit;font-size:11px;font-weight:600;
+}
+.cbtn[aria-pressed="true"]{background:#b4462f;color:#fff}   /* pressed = muted/off */
+.cbtn.danger{background:rgba(180,70,47,.34)}
+.cbtn:hover{filter:brightness(1.18)}
+
+/* ---- chat ---- */
+.chatdock{
+  position:fixed;z-index:61;right:0;bottom:0;top:0;width:min(330px,86vw);
+  display:flex;flex-direction:column;
+  background:var(--panel);border-left:1px solid var(--line);
+  box-shadow:-14px 0 34px rgba(0,0,0,.22);
+  color:var(--ink);            /* a panel, not the felt */
+}
+.chatdock .icobtn{
+  border-color:var(--line);background:var(--panel-2);color:var(--ink-dim);
+  width:32px;height:32px;
+}
+.chatdock .icobtn:hover{color:var(--ink)}
+.chatdock header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 8px 10px 14px;border-bottom:1px solid var(--line);font-weight:700;
+}
+.chatlog{flex:1;min-height:0;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.chatline{max-width:86%;padding:7px 11px;border-radius:13px;font-size:14px;line-height:1.4;
+  background:var(--panel-2);align-self:flex-start;overflow-wrap:anywhere}
+.chatline.mine{align-self:flex-end;background:var(--lead);color:var(--panel)}
+.chatline .who{display:block;font-size:11px;opacity:.72;margin-bottom:1px}
+.chatline.sys{align-self:center;background:none;color:var(--ink-dim);font-size:12.5px;text-align:center}
+.chatform{display:flex;gap:7px;padding:10px;border-top:1px solid var(--line)}
+.chatform input{flex:1;min-width:0}
+.icobtn .dot{
+  position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;
+  background:#c8553d;border:1.5px solid var(--panel);
+}
+.icobtn{position:relative}
+
+/* ---- the connection strip ---- */
+.linkstrip{
+  /* clear of the top bar: covering the score to report the connection would
+     be trading the thing you are playing for news about the plumbing */
+  position:fixed;left:50%;transform:translateX(-50%);top:54px;z-index:70;
+  max-width:min(560px,94vw);
+  padding:7px 15px;border-radius:11px;
+  background:#8a5a20;color:#fff;font-size:13px;font-weight:600;text-align:center;
+  box-shadow:0 5px 16px rgba(0,0,0,.25);
+}
+.linkstrip.bad{background:#a13d2a}
+.linkstrip.good{background:#2f6d4f}
+
+@media (max-width:560px){
+  .calldock{width:132px}
+  .chatdock{width:100%}
+}
+
+/* ---- the top bar with two extra buttons on it ----
+   Online adds a video button and a chat button. On a phone that is two more
+   things competing with the score, so the least useful item — the match-length
+   chip, which never changes — steps aside and the buttons tighten up. */
+.app.online .topbar{gap:6px}
+@media (max-width:560px){
+  .app.online .topbar{gap:4px;padding-inline:8px}
+  .app.online .icobtn{width:32px;height:32px;border-radius:8px;font-size:.9rem}
+  .app.online .target-chip{display:none}
+  .app.online .scoreboard{min-width:0}
+  .app.online .sb .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:6.5em}
+}
+
+/* ---- the offer to turn the camera on ----
+   The old design hid video behind an unlabelled dot in the top bar, which
+   meant nobody found it. This asks, once, at the moment it becomes possible. */
+.calloffer{
+  /* Sits under the top bar, never over the hand: the action buttons live at
+     the bottom of a phone screen and covering them stops the game. */
+  position:fixed;z-index:72;left:50%;transform:translateX(-50%);
+  top:calc(54px + env(safe-area-inset-top));
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;
+  max-width:min(560px,94vw);padding:12px 16px;
+  border-radius:13px;background:var(--panel);color:var(--ink);
+  border:1px solid var(--line);box-shadow:0 12px 34px rgba(0,0,0,.3);
+}
+.calloffer .offertext{font-weight:600;font-size:.95rem}
+.calloffer .btn{flex:0 0 auto}
+.calloffer .linkbtn{color:var(--ink-dim)}
+@media (max-width:520px){
+  .calloffer{left:8px;right:8px;transform:none;max-width:none;padding:10px 12px}
+  .calloffer .btn{flex:1 0 auto}
+}
+/* when both want the same strip of screen, the connection notice yields */
+.app.offering .linkstrip{top:158px}
+
+/* a green pip on the camera button while a call is running */
+.icobtn .dot.live{background:#3f9e6b}
+
+.cbtn.wide{flex:1 0 100%;background:var(--accent);color:var(--accent-ink);padding:8px 4px;line-height:1.25}
+
+/* ============================================================
+   ARRANGING A HAND BY DRAGGING
+   ============================================================ */
+
+/* Four buttons where there were three: they tighten rather than wrap,
+   because the row sits beside the deadwood chip on a narrow phone. */
+.sorts{gap:5px}
+.sorts button{padding:.42em .58em}
+@media (max-width:430px){
+  .sorts{gap:4px}
+  .sorts button{padding:.4em .46em;font-size:.72rem}
+}
+
+/* The card that follows the finger. It is a copy: the original stays in the
+   row as a placeholder so you can see exactly where it will land. */
+.card.draghost{
+  position:fixed;z-index:90;margin:0!important;pointer-events:none;
+  transform-origin:50% 50%;
+  box-shadow:0 14px 30px rgba(0,0,0,.42), 0 2px 0 var(--card-edge);
+  filter:brightness(1.04);
+  animation:liftcard .12s ease-out both;
+}
+@keyframes liftcard{from{scale:1}to{scale:1.06}}
+@media (prefers-reduced-motion:reduce){
+  .card.draghost{animation:none;scale:1.04}
+}
+
+/* the gap it came from, and where it would drop */
+.card.dragfrom{
+  opacity:.28;
+  box-shadow:none;
+  outline:2px dashed var(--on-table-line);
+  outline-offset:-3px;
+}
+
+/* While a card is up, nothing else should select, scroll or long-press. */
+body.dragging-card{user-select:none;-webkit-user-select:none}
+body.dragging-card .hand{overflow:visible}
+.hand .card{touch-action:none}

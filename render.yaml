@@ -1,0 +1,14 @@
+# Render reads this file and sets the service up on its own, so there is
+# nothing to type into the dashboard. There are no dependencies to install,
+# which is why the build step has nothing to do.
+services:
+  - type: web
+    name: gin-and-corners
+    runtime: node
+    plan: free
+    buildCommand: "echo no dependencies to install"
+    startCommand: "npm start"
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en" data-app-version="1.4.0">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Gin Rummy and Kings in the Corner for two, with video and voice.">
+<title>Gin &amp; Corners</title>
+
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1c5340">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ============ LOBBY ============ -->
+  <main class="screen lobby" id="screen-lobby">
+    <div class="lobby-inner">
+      <header class="brand">
+        <div class="pips"><span>♠</span><span>♥</span><span>♦</span><span>♣</span></div>
+        <h1>Gin &amp; Corners</h1>
+        <p>Two hands, one table.</p>
+      </header>
+
+      <div class="panel setup">
+        <div class="field">
+          <label>Game</label>
+          <div class="gamepick">
+            <button class="gamecard" id="pickGin" aria-pressed="true">
+              <span class="glyph">♠</span>
+              <span><b>Gin Rummy</b><small>Standard two-player rules</small></span>
+            </button>
+            <button class="gamecard" id="pickKings" aria-pressed="false">
+              <span class="glyph">♚</span>
+              <span><b>Kings in the Corner</b><small>Empty your hand first — low score wins</small></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Opponent</label>
+          <div class="seg" id="modeSeg">
+            <button data-v="ai" aria-pressed="true">Computer</button>
+            <button data-v="pnp" aria-pressed="false">Pass &amp; play</button>
+            <button data-v="online" aria-pressed="false">Online</button>
+          </div>
+        </div>
+
+        <div class="field" id="diffField">
+          <label>How good is the computer?</label>
+          <div class="seg" id="diffSeg">
+            <button data-v="easy" aria-pressed="false">Easy</button>
+            <button data-v="normal" aria-pressed="true">Steady</button>
+            <button data-v="sharp" aria-pressed="false">Sharp</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Players</label>
+          <div class="names">
+            <input type="text" id="n0" maxlength="14" placeholder="You" aria-label="Your name">
+            <input type="text" id="n1" maxlength="14" placeholder="Opponent" aria-label="Opponent name">
+          </div>
+        </div>
+
+        <div class="field" id="onlineField" hidden>
+          <label>Playing with someone else</label>
+          <div class="onlinebox">
+            <button class="btn primary" id="hostBtn">Start a game and get a code</button>
+            <div class="orline"><span>or</span></div>
+            <div class="joinrow">
+              <input type="text" id="joinCode" maxlength="5" autocomplete="off"
+                     autocapitalize="characters" spellcheck="false"
+                     placeholder="CODE" aria-label="Invite code from your friend">
+              <button class="btn" id="joinBtn">Join</button>
+            </div>
+            <p class="hint" id="onlineHint">One of you starts the game and reads the code to the other.</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="lenLabel">Match length</label>
+          <div class="seg" id="targetSeg">
+            <button data-v="0" aria-pressed="false">One hand</button>
+            <button data-v="100" aria-pressed="true">To 100</button>
+            <button data-v="150" aria-pressed="false">To 150</button>
+            <button data-v="200" aria-pressed="false">To 200</button>
+          </div>
+          <p class="lenNote" id="lenNote" hidden>Points are penalties for cards left in hand — the <b>lower</b> total wins.</p>
+        </div>
+
+        <button class="btn primary big" id="startBtn">Deal the first hand</button>
+      </div>
+
+      <div class="lobby-foot">
+        <button class="linkbtn" id="lobbyRules">How to play</button>
+        <button class="linkbtn" id="lobbySettings">Look &amp; sound</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============ WAITING ROOM ============ -->
+  <main class="screen room" id="screen-room" hidden>
+    <div class="room-inner">
+      <h2 id="roomTitle">Your game is ready</h2>
+      <p class="roomsub" id="roomSub">Give this code to whoever you are playing.</p>
+
+      <div class="codebox">
+        <div class="code" id="roomCode">–––––</div>
+        <button class="btn" id="copyCode">Copy the code</button>
+        <button class="btn" id="copyLink">Copy a link instead</button>
+      </div>
+
+      <p class="roomwait" id="roomWait"><span class="spinner" aria-hidden="true"></span> Waiting for them to join…</p>
+      <p class="hint" id="roomHint">Leave this window open. The game starts the moment they are in.</p>
+      <button class="linkbtn" id="roomCancel">Cancel this game</button>
+    </div>
+  </main>
+
+  <!-- ============ TABLE ============ -->
+  <main class="screen table" id="screen-table" hidden>
+    <header class="topbar">
+      <button class="icobtn" id="btnBack" title="Leave the table" aria-label="Leave the table">‹</button>
+      <div class="scoreboard" id="scoreboard"></div>
+      <button class="icobtn online-only" id="btnCall" title="Video and voice" aria-label="Video and voice" hidden>&#128249;<span class="dot live" id="callDot" hidden></span></button>
+      <button class="icobtn online-only" id="btnChat" title="Chat" aria-label="Chat" hidden>&#128172;<span class="dot" id="chatDot" hidden></span></button>
+      <button class="icobtn" id="btnRules" title="How to play" aria-label="How to play">?</button>
+      <button class="icobtn" id="btnSettings" title="Look and sound" aria-label="Look and sound">☰</button>
+    </header>
+
+    <section class="oppzone">
+      <div class="seat" id="oppSeat"></div>
+      <div class="opphand" id="oppHand"></div>
+      <div class="oppinfo" id="oppInfo" aria-live="polite"></div>
+    </section>
+
+    <section class="center">
+      <div class="piles">
+        <div class="pileslot">
+          <span class="pilelabel">Deck</span>
+          <div class="pilebox" id="stockPile"></div>
+          <span class="stockcount" id="stockCount"></span>
+        </div>
+        <div class="pileslot">
+          <span class="pilelabel">Discards</span>
+          <div class="pilebox" id="discardPile"></div>
+          <span class="stockcount" id="discardNote"></span>
+        </div>
+      </div>
+      <p class="tablemsg" id="tableMsg" aria-live="polite"></p>
+    </section>
+
+    <section class="youzone">
+      <div class="handmeta">
+        <div class="sorts" id="sorts">
+          <button id="sortAuto" title="Keep melds grouped for me">Auto</button>
+          <button id="sortRank" title="Sort by rank">Rank</button>
+          <button id="sortSuit" title="Sort by suit">Suit</button>
+          <button id="sortManual" title="Arrange them yourself by dragging">Mine</button>
+        </div>
+      </div>
+      <div class="hand" id="myHand"></div>
+      <div class="actions" id="actions"></div>
+    </section>
+  </main>
+
+  <!-- ============ KINGS IN THE CORNER ============ -->
+  <main class="screen table" id="screen-kic" hidden>
+    <header class="topbar">
+      <button class="icobtn" id="kBack" title="Leave the table" aria-label="Leave the table">‹</button>
+      <div class="scoreboard" id="kScore"></div>
+      <button class="icobtn online-only" id="kCall" title="Video and voice" aria-label="Video and voice" hidden>&#128249;<span class="dot live" id="kCallDot" hidden></span></button>
+      <button class="icobtn online-only" id="kChat" title="Chat" aria-label="Chat" hidden>&#128172;<span class="dot" id="kChatDot" hidden></span></button>
+      <button class="icobtn" id="kRules" title="How to play" aria-label="How to play">?</button>
+      <button class="icobtn" id="kSettings" title="Look and sound" aria-label="Look and sound">☰</button>
+    </header>
+
+    <section class="oppzone">
+      <div class="seat" id="kOppSeat"></div>
+      <div class="opphand" id="kOppHand"></div>
+    </section>
+
+    <section class="kwrap">
+      <div class="kboard" id="kBoard"></div>
+      <p class="tablemsg" id="kMsg" aria-live="polite"></p>
+    </section>
+
+    <section class="youzone">
+      <div class="handmeta">
+        <div class="sorts" id="kSorts">
+          <button id="kSortRank" title="Sort by rank">Rank</button>
+          <button id="kSortSuit" title="Sort by suit">Suit</button>
+          <button id="kSortManual" title="Arrange them yourself by dragging">Mine</button>
+        </div>
+      </div>
+      <div class="hand" id="kHand"></div>
+      <div class="actions" id="kActions"></div>
+    </section>
+  </main>
+  <!-- ============ VIDEO ============ -->
+  <div class="calldock" id="callDock" hidden>
+    <div class="callgrip" id="callGrip" title="Drag to move">
+      <span class="callwho" id="callWho">Opponent</span>
+      <button class="callmin" id="callMin" title="Shrink" aria-label="Shrink the video">–</button>
+    </div>
+    <div class="callbody">
+      <video id="remoteVid" playsinline autoplay></video>
+      <div class="callnote" id="callNote">Connecting…</div>
+      <video id="localVid" playsinline autoplay muted></video>
+    </div>
+    <div class="callbar">
+      <button class="cbtn wide" id="joinCallBtn" hidden>Turn my camera on too</button>
+      <button class="cbtn" id="micBtn" title="Mute" aria-pressed="false">Mic</button>
+      <button class="cbtn" id="camBtn" title="Camera off" aria-pressed="false">Cam</button>
+      <button class="cbtn danger" id="hangBtn" title="Stop the video call">End</button>
+    </div>
+  </div>
+
+  <!-- ============ CHAT ============ -->
+  <aside class="chatdock" id="chatDock" hidden aria-label="Chat">
+    <header><span>Chat</span><button class="icobtn" id="chatClose" aria-label="Close chat">&times;</button></header>
+    <div class="chatlog" id="chatLog" aria-live="polite"></div>
+    <form class="chatform" id="chatForm">
+      <input type="text" id="chatInput" maxlength="400" autocomplete="off" placeholder="Say something…" aria-label="Message">
+      <button class="btn" type="submit">Send</button>
+    </form>
+  </aside>
+
+  <div class="calloffer" id="callOffer" hidden>
+    <span class="offertext" id="callOfferText">Video and voice are ready.</span>
+    <button class="btn primary" id="callOfferYes">Turn on my camera</button>
+    <button class="linkbtn" id="callOfferNo">Not now</button>
+  </div>
+
+  <div class="linkstrip" id="linkStrip" hidden></div>
+</div>
+
+<div id="overlays"></div>
+
+<script src="/shared/engine.js"></script>
+<script src="/shared/kic.js"></script>
+<script src="/net.js"></script>
+<script src="/media.js"></script>
+<script src="/ui.js"></script>
+<script src="/kic-ui.js"></script>
+<script src="/online.js"></script>
+<script src="/boot.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Gin and Corners">
+  <defs>
+    <linearGradient id="felt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#35845e"/><stop offset="1" stop-color="#1c5340"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="104" fill="url(#felt)"/>
+  <g transform="translate(256 268)">
+    <!-- back card: fanned left, its pip kept clear of the front card -->
+    <g transform="rotate(-20) translate(-176 -132)">
+      <rect width="168" height="242" rx="19" fill="#f3eee2" stroke="rgba(24,20,14,.22)" stroke-width="3"/>
+      <text x="62" y="152" text-anchor="middle" font-family="Georgia,'Times New Roman',serif"
+            font-size="132" fill="#1a1815">&#9824;</text>
+    </g>
+    <!-- front card -->
+    <g transform="rotate(9) translate(-22 -126)">
+      <rect width="168" height="242" rx="19" fill="#fdfbf6" stroke="rgba(24,20,14,.22)" stroke-width="3"/>
+      <text x="84" y="158" text-anchor="middle" font-family="Georgia,'Times New Roman',serif"
+            font-size="138" fill="#b0202c">&#9829;</text>
+    </g>
+  </g>
+</svg>
