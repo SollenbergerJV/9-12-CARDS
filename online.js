@@ -330,7 +330,10 @@ function wireCall() {
   const dock = $('#callDock'), grip = $('#callGrip');
   let dx = 0, dy = 0, dragging = false;
   grip.addEventListener('pointerdown', function (e) {
-    if (e.target.closest('.callmin')) return;
+    /* Pressing a button in the title bar must not start a drag: capturing the
+       pointer here would redirect the click away from the button and it would
+       never fire. The shrink, size and corner controls all opt out. */
+    if (e.target.closest('.callmin') || e.target.closest('.callbig') || e.target.closest('.callsize')) return;
     dragging = true;
     dock.classList.add('dragging');
     const r = dock.getBoundingClientRect();
@@ -354,6 +357,8 @@ function wireCall() {
   }
   grip.addEventListener('pointerup', endDrag);
   grip.addEventListener('pointercancel', endDrag);
+
+  wireCallSize(dock, grip);
 
   MEDIA.on('local', function (stream) {
     const v = $('#localVid');
@@ -399,6 +404,157 @@ function wireCall() {
     }
     refreshCallButtons();
   });
+}
+
+/* ---------- how big the picture is ----------
+   On a phone the window is deliberately small: the screen is mostly cards and
+   there is nowhere for a big picture to go. On a computer there is room to
+   spare, and squinting at a postage stamp of the other player is no fun, so
+   there the window can be pulled to whatever size suits by the corner, and a
+   single button swaps between the small size and a large one. Whatever size
+   is chosen is remembered for next time.
+
+   None of this appears on a narrow screen, so the phone is untouched. */
+const DOCK_SMALL = 176;   // the size it has always been
+const DOCK_BIG = 460;     // what the button jumps to
+const DOCK_MIN = 150;
+const DOCK_KEY = 'ginco.dock.width';
+
+/* Wide enough to be worth resizing. Checked on every window change rather
+   than once at startup, so a window dragged narrow puts itself right. */
+function roomToResize() { return window.innerWidth >= 700; }
+
+function dockMaxWidth() { return Math.max(DOCK_MIN, Math.min(760, window.innerWidth - 24)); }
+
+function savedDockWidth() {
+  try {
+    const n = parseInt(localStorage.getItem(DOCK_KEY), 10);
+    if (n >= DOCK_MIN && n <= 760) return n;
+  } catch (e) {}
+  return DOCK_SMALL;
+}
+
+/* Set the width, keep the whole window on screen, and say so on the button. */
+function setDockWidth(px, remember) {
+  const dock = $('#callDock');
+  if (!dock) return;
+  const w = Math.round(Math.min(dockMaxWidth(), Math.max(DOCK_MIN, px)));
+  dock.style.width = w + 'px';
+
+  /* Growing from a window parked at the right edge would push it off screen,
+     so pull it back as it grows rather than leaving it half outside. */
+  const left = parseFloat(dock.style.left);
+  if (!isNaN(left)) {
+    dock.style.left = Math.max(6, Math.min(left, window.innerWidth - w - 6)) + 'px';
+  }
+  const top = parseFloat(dock.style.top);
+  if (!isNaN(top)) {
+    dock.style.top = Math.max(4, Math.min(top, window.innerHeight - 40)) + 'px';
+  }
+
+  if (remember) { try { localStorage.setItem(DOCK_KEY, String(w)); } catch (e) {} }
+  const big = $('#callBig');
+  if (big) {
+    const isBig = w >= (DOCK_SMALL + DOCK_BIG) / 2;
+    big.textContent = isBig ? 'Smaller' : 'Bigger';
+    big.title = isBig ? 'Make the video smaller' : 'Make the video bigger';
+  }
+  return w;
+}
+
+function wireCallSize(dock, grip) {
+  if (!dock || dock.querySelector('.callsize')) return;
+
+  /* The controls are built here rather than written into the page so that
+     this is the only file that has to change to get them. */
+  const big = document.createElement('button');
+  big.className = 'callbig';
+  big.id = 'callBig';
+  big.type = 'button';
+  big.textContent = 'Bigger';
+  grip.insertBefore(big, grip.querySelector('.callmin'));
+
+  const handle = document.createElement('div');
+  handle.className = 'callsize';
+  handle.id = 'callSize';
+  handle.title = 'Drag to resize';
+  handle.setAttribute('aria-hidden', 'true');
+  dock.appendChild(handle);
+
+  const css = document.createElement('style');
+  css.textContent =
+    '.callbig{flex:0 0 auto;height:20px;padding:0 8px;border:0;border-radius:6px;cursor:pointer;' +
+    'background:rgba(255,255,255,.12);color:#e8eef2;font:inherit;font-size:11px;font-weight:600;line-height:20px}' +
+    '.callbig:hover{filter:brightness(1.25)}' +
+    '.callsize{position:absolute;right:0;bottom:0;width:22px;height:22px;cursor:nwse-resize;' +
+    'touch-action:none;z-index:2}' +
+    /* two short strokes in the corner: the usual sign for "pull me" */
+    '.callsize::after{content:"";position:absolute;right:4px;bottom:4px;width:9px;height:9px;' +
+    'border-right:2px solid rgba(255,255,255,.5);border-bottom:2px solid rgba(255,255,255,.5);border-radius:0 0 3px 0}' +
+    '.calldock.min .callsize,.calldock.sizing .callgrip{pointer-events:none}' +
+    '.calldock.min .callsize{display:none}' +
+    '.calldock.narrow .callsize,.calldock.narrow .callbig{display:none}' +
+    /* the corner grip sits over the button row, so the row gives it its own
+       space rather than letting it swallow the right edge of End */
+    '.calldock.resizable .callbar{padding-right:26px}' +
+    '.calldock.sizing{user-select:none}';
+  document.head.appendChild(css);
+
+  big.onclick = function () {
+    const now = dock.offsetWidth;
+    const isBig = now >= (DOCK_SMALL + DOCK_BIG) / 2;
+    setDockWidth(isBig ? DOCK_SMALL : DOCK_BIG, true);
+  };
+
+  /* Dragging the corner. Only the width is taken from the pointer — the
+     picture keeps its 4:3 shape, so a height pulled independently would only
+     add grey bars. The window therefore grows as a whole, which is what the
+     corner suggests it will do. */
+  let sizing = false, startX = 0, startW = 0;
+  handle.addEventListener('pointerdown', function (e) {
+    sizing = true;
+    startX = e.clientX;
+    startW = dock.offsetWidth;
+    dock.classList.add('sizing');
+    handle.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  handle.addEventListener('pointermove', function (e) {
+    if (!sizing) return;
+    setDockWidth(startW + (e.clientX - startX), false);
+  });
+  function endSize(e) {
+    if (!sizing) return;
+    sizing = false;
+    dock.classList.remove('sizing');
+    try { handle.releasePointerCapture(e.pointerId); } catch (err) {}
+    setDockWidth(dock.offsetWidth, true);
+  }
+  handle.addEventListener('pointerup', endSize);
+  handle.addEventListener('pointercancel', endSize);
+
+  /* A double-click on the title bar is the other way people expect to toggle
+     a window's size, so it does the same as the button. */
+  grip.addEventListener('dblclick', function (e) {
+    if (e.target.closest('.callmin') || e.target.closest('.callbig')) return;
+    big.onclick();
+  });
+
+  applyDockSizing();
+  window.addEventListener('resize', applyDockSizing);
+}
+
+/* Decide whether this screen gets the resizing at all, and keep the window
+   inside the viewport when the window itself changes size. */
+function applyDockSizing() {
+  const dock = $('#callDock');
+  if (!dock) return;
+  const wide = roomToResize();
+  dock.classList.toggle('narrow', !wide);
+  dock.classList.toggle('resizable', wide);
+  if (!wide) { dock.style.width = ''; return; }
+  setDockWidth(dock.offsetWidth >= DOCK_MIN && dock.style.width ? parseFloat(dock.style.width) : savedDockWidth(), false);
 }
 
 /* ---------- reacting to the server ---------- */
