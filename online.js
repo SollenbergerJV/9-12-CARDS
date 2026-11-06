@@ -218,6 +218,7 @@ function showCallDock(show) {
   const who = $('#callWho');
   if (who && ONLINE) who.textContent = nameOf(1 - MYSEAT) || 'Opponent';
   d.hidden = !show;
+  if (show) refreshCallView();
   if (show && !CALL.placed) {
     // park it top-right, clear of the score bar
     const w = d.offsetWidth || 176;
@@ -319,7 +320,7 @@ function wireCall() {
   $('#joinCallBtn').onclick = function () { startCall(); };
   $('#hangBtn').onclick = stopCall;
   $('#micBtn').onclick = function () { MEDIA.setTrack('audio', !MEDIA.enabled('audio')); refreshCallButtons(); };
-  $('#camBtn').onclick = function () { MEDIA.setTrack('video', !MEDIA.enabled('video')); refreshCallButtons(); };
+  $('#camBtn').onclick = function () { MEDIA.setTrack('video', !MEDIA.enabled('video')); refreshCallView(); refreshCallButtons(); };
   $('#callMin').onclick = function () {
     const d = $('#callDock');
     d.classList.toggle('min');
@@ -333,7 +334,7 @@ function wireCall() {
     /* Pressing a button in the title bar must not start a drag: capturing the
        pointer here would redirect the click away from the button and it would
        never fire. The shrink, size and corner controls all opt out. */
-    if (e.target.closest('.callmin') || e.target.closest('.callbig') || e.target.closest('.callsize')) return;
+    if (e.target.closest('.callmin') || e.target.closest('.callbig') || e.target.closest('.callboth') || e.target.closest('.callsize')) return;
     dragging = true;
     dock.classList.add('dragging');
     const r = dock.getBoundingClientRect();
@@ -367,6 +368,7 @@ function wireCall() {
       // an empty preview is just a grey hole; show it only once it has a picture
       v.classList.toggle('on', !!(stream && stream.getVideoTracks().length));
     }
+    refreshCallView();
     refreshCallButtons();
   });
   MEDIA.on('stream', function (stream) {
@@ -388,6 +390,7 @@ function wireCall() {
     } else {
       CALL.receiving = false;
     }
+    refreshCallView();
     refreshCallButtons();
   });
   MEDIA.on('state', function (s) {
@@ -402,6 +405,7 @@ function wireCall() {
       showCallDock(false); hideCallOffer();
       sysLine('The video call ended.');
     }
+    refreshCallView();
     refreshCallButtons();
   });
 }
@@ -416,7 +420,7 @@ function wireCall() {
 
    None of this appears on a narrow screen, so the phone is untouched. */
 const DOCK_SMALL = 176;   // the size it has always been
-const DOCK_BIG = 460;     // what the button jumps to
+const DOCK_BIG = 520;     // what the button jumps to
 const DOCK_MIN = 150;
 const DOCK_KEY = 'ginco.dock.width';
 
@@ -424,12 +428,12 @@ const DOCK_KEY = 'ginco.dock.width';
    than once at startup, so a window dragged narrow puts itself right. */
 function roomToResize() { return window.innerWidth >= 700; }
 
-function dockMaxWidth() { return Math.max(DOCK_MIN, Math.min(760, window.innerWidth - 24)); }
+function dockMaxWidth() { return Math.max(DOCK_MIN, Math.min(900, window.innerWidth - 24)); }
 
 function savedDockWidth() {
   try {
     const n = parseInt(localStorage.getItem(DOCK_KEY), 10);
-    if (n >= DOCK_MIN && n <= 760) return n;
+    if (n >= DOCK_MIN && n <= 900) return n;
   } catch (e) {}
   return DOCK_SMALL;
 }
@@ -474,6 +478,23 @@ function wireCallSize(dock, grip) {
   big.textContent = 'Bigger';
   grip.insertBefore(big, grip.querySelector('.callmin'));
 
+  /* The point of the window is the other player's face. Your own picture in
+     the corner is for checking you are in shot, which is a thing you want for
+     a few seconds and then not again, so it starts off and has a button. This
+     one is on the phone as well — it costs no room and the phone's window is
+     the one with least to spare. */
+  const both = document.createElement('button');
+  both.className = 'callboth';
+  both.id = 'callBoth';
+  both.type = 'button';
+  both.textContent = 'Me';
+  both.title = 'Show my own picture as well';
+  both.setAttribute('aria-pressed', showingSelf() ? 'true' : 'false');
+  grip.insertBefore(both, grip.querySelector('.callmin'));
+  both.onclick = function () {
+    setShowingSelf(!showingSelf());
+  };
+
   const handle = document.createElement('div');
   handle.className = 'callsize';
   handle.id = 'callSize';
@@ -497,7 +518,29 @@ function wireCallSize(dock, grip) {
     /* the corner grip sits over the button row, so the row gives it its own
        space rather than letting it swallow the right edge of End */
     '.calldock.resizable .callbar{padding-right:26px}' +
-    '.calldock.sizing{user-select:none}';
+    '.calldock.sizing{user-select:none}' +
+    /* Until the other player switches their camera on there is nothing to put
+       in the big frame, and showing your own face as a thumbnail in the corner
+       of a black rectangle wastes the whole window. So while you are the only
+       picture, you ARE the picture: your camera fills the frame and grows with
+       it, and it steps back into the corner the moment they appear. */
+    '.calldock.solo #remoteVid{display:none}' +
+    '.calldock.solo #localVid.on{position:absolute;inset:0;width:100%;height:100%;' +
+    'aspect-ratio:auto;border:0;border-radius:0;right:auto;bottom:auto;' +
+    /* fill the frame corner to corner: a camera that is not 4:3 would
+       otherwise sit in the middle with dead bars around it */
+    'object-fit:cover}' +
+    /* your own picture is off unless asked for — except when it is the only
+       picture there is, which the solo rule above handles */
+    '.calldock:not(.showme):not(.solo) #localVid{display:none}' +
+    '.callboth{flex:0 0 auto;height:20px;padding:0 7px;border:0;border-radius:6px;cursor:pointer;' +
+    'background:rgba(255,255,255,.12);color:#e8eef2;font:inherit;font-size:11px;font-weight:600;line-height:20px}' +
+    '.callboth[aria-pressed="true"]{background:#5b7c8d;color:#fff}' +
+    '.callboth:hover{filter:brightness(1.25)}' +
+    '.callboth[hidden]{display:none}' +
+    /* the phone keeps this button; only the resizing is held back there */
+    '.calldock.narrow .callgrip{gap:4px;padding-left:7px}' +
+    '.calldock.narrow .callboth{padding:0 5px}';
   document.head.appendChild(css);
 
   big.onclick = function () {
@@ -537,7 +580,7 @@ function wireCallSize(dock, grip) {
   /* A double-click on the title bar is the other way people expect to toggle
      a window's size, so it does the same as the button. */
   grip.addEventListener('dblclick', function (e) {
-    if (e.target.closest('.callmin') || e.target.closest('.callbig')) return;
+    if (e.target.closest('.callmin') || e.target.closest('.callbig') || e.target.closest('.callboth')) return;
     big.onclick();
   });
 
@@ -555,6 +598,54 @@ function applyDockSizing() {
   dock.classList.toggle('resizable', wide);
   if (!wide) { dock.style.width = ''; return; }
   setDockWidth(dock.offsetWidth >= DOCK_MIN && dock.style.width ? parseFloat(dock.style.width) : savedDockWidth(), false);
+}
+
+/* ---------- whether your own picture shows too ----------
+   Off by default: the window exists to show the other player, and the inset
+   of yourself is a mirror you glance at once. Remembered either way. */
+const SELF_KEY = 'ginco.dock.showself';
+let SHOW_SELF = null;
+
+function showingSelf() {
+  if (SHOW_SELF === null) {
+    try { SHOW_SELF = localStorage.getItem(SELF_KEY) === 'yes'; } catch (e) { SHOW_SELF = false; }
+  }
+  return SHOW_SELF;
+}
+function setShowingSelf(on) {
+  SHOW_SELF = !!on;
+  try { localStorage.setItem(SELF_KEY, SHOW_SELF ? 'yes' : 'no'); } catch (e) {}
+  refreshCallView();
+}
+
+/* Is there a picture coming from the other player? Until there is, the window
+   shows your own camera full size rather than a black rectangle. */
+function refreshCallView() {
+  const dock = $('#callDock');
+  if (!dock) return;
+  const rv = $('#remoteVid');
+  let haveRemote = false;
+  try {
+    const st = rv && rv.srcObject;
+    haveRemote = !!(st && st.getVideoTracks && st.getVideoTracks().length);
+  } catch (e) {}
+  dock.classList.toggle('solo', !haveRemote);
+  dock.classList.toggle('showme', showingSelf());
+
+  const who = $('#callWho');
+  if (who) who.textContent = haveRemote ? (nameOf(1 - MYSEAT) || 'Opponent') : 'You';
+
+  /* With no camera of your own there is nothing the button could show, and
+     while yours is the only picture it is already full size, so in both cases
+     the button would be a lie. */
+  const both = $('#callBoth');
+  if (both) {
+    const lv = $('#localVid');
+    const haveSelf = !!(lv && lv.classList.contains('on'));
+    both.hidden = !haveSelf || !haveRemote;
+    both.setAttribute('aria-pressed', showingSelf() ? 'true' : 'false');
+    both.title = showingSelf() ? 'Hide my own picture' : 'Show my own picture as well';
+  }
 }
 
 /* ---------- reacting to the server ---------- */
